@@ -1,0 +1,64 @@
+<header>
+  <h1>Hotel Bello Amanecer</h1>
+  <p>Reserva de habitaciones en línea</p>
+</header>
+
+<main>
+  <p class="ok" *ngIf="mensaje">{{ mensaje }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <section>
+    <h2>1. Consultar disponibilidad</h2>
+    <form (ngSubmit)="buscar()">
+      <label>Entrada <input type="date" name="entrada" [(ngModel)]="busqueda.entrada" required></label>
+      <label>Salida <input type="date" name="salida" [(ngModel)]="busqueda.salida" required></label>
+      <label>Tipo
+        <select name="tipo" [(ngModel)]="busqueda.tipo">
+          <option value="">Cualquiera</option>
+          <option value="SIMPLE">Simple</option>
+          <option value="DOBLE">Doble</option>
+          <option value="SUITE">Suite</option>
+        </select>
+      </label>
+      <label>Huéspedes <input type="number" name="huespedes" min="1" max="10" [(ngModel)]="busqueda.huespedes"></label>
+      <button type="submit">Buscar</button>
+    </form>
+
+    <p *ngIf="buscado && habitaciones.length === 0">No hay habitaciones disponibles para esos criterios.</p>
+    <table *ngIf="habitaciones.length > 0">
+      <thead><tr><th>N.°</th><th>Tipo</th><th>Capacidad</th><th>Precio por noche</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let h of habitaciones">
+          <td>{{ h.numero }}</td><td>{{ h.tipo }}</td><td>{{ h.capacidad }}</td>
+          <td>S/ {{ h.precioNoche | number:'1.2-2' }}</td>
+          <td><button type="button" (click)="elegir(h)">Reservar</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section *ngIf="seleccionada">
+    <h2>2. Datos del huésped (habitación {{ seleccionada.numero }})</h2>
+    <form (ngSubmit)="reservar()">
+      <label>Nombre completo <input name="nombre" [(ngModel)]="huesped.nombre" required></label>
+      <label>Correo electrónico <input type="email" name="email" [(ngModel)]="huesped.email" required></label>
+      <button type="submit">Confirmar reserva</button>
+    </form>
+    <div class="tarjeta" *ngIf="reserva">
+      <strong>Código de reserva:</strong> <code>{{ reserva.id }}</code><br>
+      Total: S/ {{ reserva.total | number:'1.2-2' }} · Estado: <b>{{ reserva.estado }}</b>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Consultar estado de una reserva</h2>
+    <form (ngSubmit)="consultar()">
+      <label>Código <input name="codigo" [(ngModel)]="consultaId" size="40" required></label>
+      <button type="submit">Consultar</button>
+    </form>
+    <div class="tarjeta" *ngIf="consulta">
+      Estado: <b [class]="consulta.estado">{{ consulta.estado }}</b> · Total: S/ {{ consulta.total | number:'1.2-2' }}<br>
+      Del {{ consulta.fechaEntrada }} al {{ consulta.fechaSalida }}
+    </div>
+  </section>
+</main>

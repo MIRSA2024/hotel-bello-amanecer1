@@ -1,0 +1,67 @@
+{
+  "family": "hba-api-reservas",
+  "networkMode": "bridge",
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "executionRoleArn": "${LAB_ROLE_ARN}",
+  "taskRoleArn": "${LAB_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "api-reservas",
+      "image": "${ECR_REGISTRY}/hba/api-reservas:${IMAGE_TAG}",
+      "essential": true,
+      "cpu": 512,
+      "memory": 768,
+      "environment": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:postgresql://${DB_ENDPOINT}:5432/reservas?sslmode=require"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "hba_admin"
+        },
+        {
+          "name": "SQS_QUEUE_RESERVAS",
+          "value": "q-reservas"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "${AWS_REGION}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "${DB_SECRET_ARN}:password::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/hba/api-reservas",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8080/actuator/health/liveness || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 0,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ]
+}

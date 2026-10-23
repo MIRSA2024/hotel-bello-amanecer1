@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: consumer-pagos
+  # SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD llegan como variables de entorno
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reservas
+    username: hba_admin
+    password: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  aws-region: ${AWS_REGION:us-east-1}
+  sqs-endpoint: ${SQS_ENDPOINT:}
+  sqs-queue-entrada: ${SQS_QUEUE_ENTRADA:q-reservas}
+  sqs-queue-salida: ${SQS_QUEUE_SALIDA:q-notificaciones}
+  # Pasarela de pagos simulada (latencia y fallos configurables)
+  pago-latencia-ms: ${PAGO_LATENCIA_MS:300}
+  pago-tasa-rechazo: ${PAGO_TASA_RECHAZO:0.10}
+  # true = lanza error en cada mensaje (sirve para probar reintentos y la DLQ, RF07)
+  pago-forzar-error: ${PAGO_FORZAR_ERROR:false}

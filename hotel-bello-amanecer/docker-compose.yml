@@ -1,0 +1,71 @@
+name: hba
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      retries: 5
+    networks: [backend]
+
+  sqs: # emulador SQS (equivale a Amazon SQS)
+    image: softwaremill/elasticmq-native:latest # fijar versión
+    volumes:
+      - ./infra/local/elasticmq.conf:/opt/elasticmq.conf:ro
+    networks: [backend]
+
+  api-reservas:
+    build: ./services/api-reservas
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SQS_ENDPOINT: http://sqs:9324
+      SQS_QUEUE_RESERVAS: q-reservas
+    depends_on:
+      postgres: { condition: service_healthy }
+      sqs: { condition: service_started }
+    ports: ["8080:8080"]
+    networks: [frontend, backend]
+
+  consumer-pagos:
+    build: ./services/consumer-pagos
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SQS_ENDPOINT: http://sqs:9324
+      SQS_QUEUE_ENTRADA: q-reservas
+      SQS_QUEUE_SALIDA: q-notificaciones
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [backend]
+
+  servicio-notificaciones:
+    build: ./services/servicio-notificaciones
+    environment:
+      SQS_ENDPOINT: http://sqs:9324
+      SQS_QUEUE_ENTRADA: q-notificaciones
+      MAIL_PROVIDER: log # en local solo registra el correo
+    depends_on: [sqs]
+    networks: [backend]
+
+  frontend-web:
+    build: ./services/frontend-web
+    ports: ["8081:8080"]
+    depends_on: [api-reservas]
+    networks: [frontend]
+
+networks:
+  frontend: {}
+  backend: {}
+
+volumes:
+  pgdata: {}

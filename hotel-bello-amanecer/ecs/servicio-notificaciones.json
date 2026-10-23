@@ -1,0 +1,56 @@
+{
+  "family": "hba-servicio-notificaciones",
+  "networkMode": "bridge",
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "executionRoleArn": "${LAB_ROLE_ARN}",
+  "taskRoleArn": "${LAB_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "servicio-notificaciones",
+      "image": "${ECR_REGISTRY}/hba/servicio-notificaciones:${IMAGE_TAG}",
+      "essential": true,
+      "cpu": 256,
+      "memory": 512,
+      "environment": [
+        {
+          "name": "SQS_QUEUE_ENTRADA",
+          "value": "q-notificaciones"
+        },
+        {
+          "name": "MAIL_PROVIDER",
+          "value": "log"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "${AWS_REGION}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MAIL_API_KEY",
+          "valueFrom": "${MAIL_SECRET_ARN}"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/hba/servicio-notificaciones",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8082/actuator/health/liveness || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

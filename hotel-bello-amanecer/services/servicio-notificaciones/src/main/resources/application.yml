@@ -1,0 +1,24 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: servicio-notificaciones
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  aws-region: ${AWS_REGION:us-east-1}
+  sqs-endpoint: ${SQS_ENDPOINT:}
+  sqs-queue-entrada: ${SQS_QUEUE_ENTRADA:q-notificaciones}
+  mail-provider: ${MAIL_PROVIDER:log}          # log | sendgrid
+  mail-from: ${MAIL_FROM:reservas@hotelbelloamanecer.pe}
+  mail-api-key: ${MAIL_API_KEY:}

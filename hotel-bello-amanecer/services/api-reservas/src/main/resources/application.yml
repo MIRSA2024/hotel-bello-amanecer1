@@ -1,0 +1,30 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-reservas
+  # SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD llegan como variables de entorno
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reservas
+    username: hba_admin
+    password: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  aws-region: ${AWS_REGION:us-east-1}
+  sqs-endpoint: ${SQS_ENDPOINT:}            # solo en local (ElasticMQ); en AWS queda vacío
+  sqs-queue-reservas: ${SQS_QUEUE_RESERVAS:q-reservas}

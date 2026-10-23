@@ -1,0 +1,64 @@
+{
+  "family": "hba-consumer-pagos",
+  "networkMode": "bridge",
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "executionRoleArn": "${LAB_ROLE_ARN}",
+  "taskRoleArn": "${LAB_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "consumer-pagos",
+      "image": "${ECR_REGISTRY}/hba/consumer-pagos:${IMAGE_TAG}",
+      "essential": true,
+      "cpu": 256,
+      "memory": 512,
+      "environment": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:postgresql://${DB_ENDPOINT}:5432/reservas?sslmode=require"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "hba_admin"
+        },
+        {
+          "name": "SQS_QUEUE_ENTRADA",
+          "value": "q-reservas"
+        },
+        {
+          "name": "SQS_QUEUE_SALIDA",
+          "value": "q-notificaciones"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "${AWS_REGION}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "${DB_SECRET_ARN}:password::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/hba/consumer-pagos",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8081/actuator/health/liveness || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

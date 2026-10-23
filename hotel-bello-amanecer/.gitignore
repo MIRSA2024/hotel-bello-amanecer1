@@ -1,0 +1,25 @@
+# Secretos y estado (NUNCA versionar)
+.env
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.auto.tfvars.json
+tfplan
+.terraform/
+.terraform.lock.hcl.bak
+crash.log
+
+# Compilación
+target/
+node_modules/
+dist/
+.angular/
+
+# Sistema / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+.rendered-*.json
+.last-image-tag
